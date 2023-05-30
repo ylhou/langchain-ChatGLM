@@ -175,4 +175,5 @@ pyrightconfig.json
 loader/tmp_files
 flagged/*
 
-kefu_langchain_only_query.txt
+# vs code
+*.code-workspace
