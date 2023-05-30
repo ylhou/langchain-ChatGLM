@@ -174,3 +174,6 @@ embedding/*
 pyrightconfig.json
 loader/tmp_files
 flagged/*
+
+# vs code
+*.code-workspace
