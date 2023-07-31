@@ -167,6 +167,7 @@ log/*
 vector_store/*
 content/*
 api_content/*
+knowledge_base/*
 
 llm/*
 embedding/*
@@ -177,3 +178,5 @@ flagged/*
 
 # vs code
 *.code-workspace
+ptuning-v2/*.json
+ptuning-v2/*.bin

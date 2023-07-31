@@ -1,3 +1,4 @@
+
 import argparse
 import os
 from configs.model_config import *
@@ -31,20 +32,20 @@ def dir_path(string):
     return s
 
 
-parser = argparse.ArgumentParser(prog='langchina-ChatGLM',
+parser = argparse.ArgumentParser(prog='langchain-ChatGLM',
                                  description='About langchain-ChatGLM, local knowledge based ChatGLM with langchain ｜ '
                                              '基于本地知识库的 ChatGLM 问答')
 
-parser.add_argument('--no-remote-model', action='store_true', default=NO_REMOTE_MODEL, help='remote in the model on '
-                                                                                            'loader checkpoint, '
-                                                                                            'if your load local '
-                                                                                            'model to add the ` '
-                                                                                            '--no-remote-model`')
-parser.add_argument('--model', type=str, default=LLM_MODEL, help='Name of the model to load by default.')
+parser.add_argument('--no-remote-model', action='store_true', help='remote in the model on '
+                                                                   'loader checkpoint, '
+                                                                   'if your load local '
+                                                                   'model to add the ` '
+                                                                   '--no-remote-model`')
+parser.add_argument('--model-name', type=str, default=LLM_MODEL, help='Name of the model to load by default.')
 parser.add_argument('--lora', type=str, help='Name of the LoRA to apply to the model by default.')
-parser.add_argument("--model-dir", type=str, default=MODEL_DIR, help="Path to directory with all the models")
 parser.add_argument("--lora-dir", type=str, default=LORA_DIR, help="Path to directory with all the loras")
-
+parser.add_argument('--use-ptuning-v2',action='store_true',help="whether use ptuning-v2 checkpoint")
+parser.add_argument("--ptuning-dir",type=str,default=PTUNING_DIR,help="the dir of ptuning-v2 checkpoint")
 # Accelerate/transformers
 parser.add_argument('--load-in-8bit', action='store_true', default=LOAD_IN_8BIT,
                     help='Load the model with 8-bit precision.')

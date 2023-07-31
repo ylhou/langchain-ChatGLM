@@ -1,13 +1,14 @@
 from abc import ABC, abstractmethod
-from typing import Optional, List
+from typing import Any, Dict, List, Optional, Generator
 import traceback
 from collections import deque
 from queue import Queue
 from threading import Thread
-
+from langchain.callbacks.manager import CallbackManagerForChainRun
+from models.loader import LoaderCheckPoint
+from pydantic import BaseModel
 import torch
 import transformers
-from models.loader import LoaderCheckPoint
 
 
 class ListenerToken:
@@ -23,13 +24,12 @@ class ListenerToken:
         self._scores = _scores
 
 
-class AnswerResult:
+class AnswerResult(BaseModel):
     """
     消息实体
     """
     history: List[List[str]] = []
     llm_output: Optional[dict] = None
-    listenerToken: ListenerToken = None
 
 
 class AnswerResultStream:
@@ -155,19 +155,9 @@ class BaseAnswer(ABC):
     @abstractmethod
     def _check_point(self) -> LoaderCheckPoint:
         """Return _check_point of llm."""
-
-    @property
-    @abstractmethod
-    def _history_len(self) -> int:
-        """Return _history_len of llm."""
-
-    @abstractmethod
-    def set_history_len(self, history_len: int) -> None:
-        """Return _history_len of llm."""
-
-    def generatorAnswer(self, prompt: str,
-                        history: List[List[str]] = [],
-                        streaming: bool = False):
+    def generatorAnswer(self,
+                        inputs: Dict[str, Any],
+                        run_manager: Optional[CallbackManagerForChainRun] = None,) -> Generator[Any, str, bool]:
         def generate_with_callback(callback=None, **kwargs):
             kwargs['generate_with_callback'] = AnswerResultStream(callback_func=callback)
             self._generate_answer(**kwargs)
@@ -175,24 +165,13 @@ class BaseAnswer(ABC):
         def generate_with_streaming(**kwargs):
             return Iteratorize(generate_with_callback, kwargs)
 
-        """
-        eos_token_id是指定token（例如，"</s>"），
-        用于表示序列的结束。在生成文本任务中，生成器在生成序列时，将不断地生成token，直到生成此特殊的eos_token_id，表示序列生成已经完成。
-        在Hugging Face Transformer模型中，eos_token_id是由tokenizer自动添加到输入中的。
-        在模型生成输出时，如果模型生成了eos_token_id，则生成过程将停止并返回生成的序列。
-        """
-        eos_token_ids = [
-            self._check_point.tokenizer.eos_token_id] if self._check_point.tokenizer.eos_token_id is not None else []
-
-        with generate_with_streaming(prompt=prompt, history=history, streaming=streaming) as generator:
+        with generate_with_streaming(inputs=inputs, run_manager=run_manager) as generator:
             for answerResult in generator:
-                if answerResult.listenerToken:
-                    output = answerResult.listenerToken.input_ids
                 yield answerResult
 
     @abstractmethod
-    def _generate_answer(self, prompt: str,
-                         history: List[List[str]] = [],
-                         streaming: bool = False,
+    def _generate_answer(self,
+                         inputs: Dict[str, Any],
+                         run_manager: Optional[CallbackManagerForChainRun] = None,
                          generate_with_callback: AnswerResultStream = None) -> None:
         pass
